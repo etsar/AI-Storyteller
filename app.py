@@ -7,7 +7,6 @@ import os
 from extract_text import *
 import requests
 
-
 app = Flask(__name__)
 # Initialize with your OpenAI API key
 load_dotenv() 
@@ -17,7 +16,7 @@ client = OpenAI(
 )
 
 # voice generation URL
-url = "https://api.elevenlabs.io/v1/text-to-speech/mt8Xy7FBJEHheef7Glqi"
+url = "https://api.elevenlabs.io/v1/text-to-speech/tVkOo4DLgZb89qB0x4qP"
 
 headers = {
   "Accept": "audio/mpeg",
@@ -70,15 +69,20 @@ def book_display():
     user_input = request.args.get('user_input')
 
     # delimiter = "####"
-    system_message = f"""Follow these steps to generate the final output in the format strictly as shown in the example format identified between the below.
+    system_message = f"""Follow these steps to generate the final output in the format strictly as shown in the example format below.
     You are a world class story generator.
-    Step 1: Generate a children's story title for a {theme} themed book that is {num_pages} pages long, for children ages {age_range} years old. 
-    Step 2: For each page, write a page text for a children's book. The book must consist of {num_char} characters. There needs to be at least one dialogue.
+    Step 1: {delimiter}Generate a children's story title for a {theme} themed book that is {num_pages} pages long, for children ages {age_range} years old.
+    Step 2: {delimiter}Generate an outline for each page. The book must consist of {num_char} characters.
+    Step 3: {delimiter}Based on Step 2, for each page, write a page text for a children's book. There needs to be at least one dialogue.
     
     Example Format: 
     Step 1: The Little Explorer's Journey
 
     Step 2: 
+    Page 1: Little Explorer prepares for a journey around the world.
+    Page 2: Little Explorer meets a new friend, Wise Owl.
+    
+    Step 3: 
     Page 1: Once upon a time, Little Explorer packed his bag. "I'm ready for a big adventure!" he exclaimed.
     Page 2: In the forest, he met Wise Owl. "What do you seek?" asked Owl, peering down.
     """
@@ -88,7 +92,7 @@ def book_display():
         model="gpt-4-turbo",
         messages=[
             {"role": "system", "content":system_message},
-            {"role": "user", "content": f"Generate a story based on {user_input}."}
+            {"role": "user", "content": f"{delimiter}Generate a story based on {user_input}.{delimiter}"}
         ])
 
     response_output = response.choices[0].message.content.strip()
@@ -106,15 +110,13 @@ def book_display():
 
     # Generate text, images and audio for each page
     title = extract_title(response_output)
-    # characters_output = extract_char(response_output)
-    # print(characters_output)
-    # print(title)
+    print(title)
     pages = []
     page_contents = extract_page_contents(response_output)
-    # print(page_contents)
+    print(page_contents)
 
     for page, content in page_contents.items():
-        # print(content)
+        print(content)
         response_2 = client.images.generate(
             model = "dall-e-3",
             prompt = f"This is for a kids story book. Characters are: {characters_output} Use {content} for generation. There must be no words in image.",
